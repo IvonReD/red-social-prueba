@@ -1,5 +1,7 @@
 /* ++++++++++++ Initialize Firebase ++++++++++ */
-var config = {
+function inicializarFirebase() {
+
+  var config = {
     apiKey: "AIzaSyC0Mm77qD91FvT1x4YWY_3NEtSx3Hkbh4c",
     authDomain: "pruebas-3d15a.firebaseapp.com",
     databaseURL: "https://pruebas-3d15a.firebaseio.com",
@@ -8,10 +10,11 @@ var config = {
     messagingSenderId: "437883428230"
   };
   firebase.initializeApp(config);
+}
 
 var provider = new firebase.auth.GoogleAuthProvider();
 
-
+/* ++++++++++++ Ingresa el Usuario por medio de Cuenta GMAIL ++++++++++ */
 $('#login').click(function(){
 	firebase.auth()
 	.signInWithPopup(provider)
@@ -25,7 +28,7 @@ $('#login').click(function(){
 	})
 });
 
-// Funcion guarda automaticamente al usuario que se loguea con gmail
+// Funcion guarda automaticamente al usuario en la BD en firebase
 function saveDate(user) {
   var usuario = {
     uid:user.uid,
@@ -38,26 +41,36 @@ function saveDate(user) {
 
 }
 
-//Escribir en BD
+/* ++++++++++++ Seccion donde el Usuario puede escribir un mensaje ++++++++++ */
+window.onload = inicializar;
+var formulario;
+var refMensajes;
+var fondosMensajes;
+function inicializar() {
+  formulario = document.getElementById("formulario");
+  formulario.addEventListener("submit", enviarDatos, false);
+  fondosMensajes = document.getElementById('fondo-mensajes');
+  inicializarFirebase();
+  mostrarmensajes();
+}
 
-$('#guardar').click(function(){
-  firebase.database().ref("pruebas")
-  .set({
-    nombre:"Ivon",
-    edad:"20",
-    sexo:"mucho"
+function mostrarmensajes() {
+  refMensajes = firebase.database().ref().child("mensajes");
+
+  refMensajes.on("value", function(snap){
+    var todosLosMensajes = "";
+    datos = snap.val();
+    for(var key in datos){
+      todosLosMensajes += "</br><strong>" + datos[key].mensaje;
+    }
+    fondosMensajes.innerHTML = todosLosMensajes;
+
   })
-});
+}
 
-// $('#guardar').click(function(){
-//   firebase.database().ref("pruebas")
-//   .set($('#input'))
-// });
-
-// aqui estoy leyendo de la BD
-// firebase.database().ref("pruebas")
-// .on("child_added", function() {
-//   var user = s.val();
-//   	$('#root').append("<img width='100px' src='"+user.foto+"''/>");
-//
-// })
+function enviarDatos(event) {
+  event.preventDefault();
+  refMensajes.push({
+    mensaje:event.target.mensaje.value});
+    formulario.reset();
+}
